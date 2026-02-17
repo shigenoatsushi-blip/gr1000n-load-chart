@@ -1,4 +1,4 @@
-var CACHE_NAME = 'gr1000n-v2';
+var CACHE_NAME = 'gr1000n-v3';
 var ASSETS = [
     './',
     './index.html',
@@ -39,11 +39,17 @@ self.addEventListener('activate', function(event) {
     self.clients.claim();
 });
 
-// Fetch - cache first, then network
+// Fetch - network first, then cache (always shows latest version when online)
 self.addEventListener('fetch', function(event) {
     event.respondWith(
-        caches.match(event.request).then(function(response) {
-            return response || fetch(event.request);
+        fetch(event.request).then(function(response) {
+            var responseClone = response.clone();
+            caches.open(CACHE_NAME).then(function(cache) {
+                cache.put(event.request, responseClone);
+            });
+            return response;
+        }).catch(function() {
+            return caches.match(event.request);
         })
     );
 });
