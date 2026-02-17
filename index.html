@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a237e">
+    <title>GR-1000N 定格総荷重表</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #1a237e;
+            --primary-light: #3949ab;
+            --accent: #ff6f00;
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --text: #212121;
+            --text-secondary: #757575;
+            --success: #2e7d32;
+            --warning: #f57f17;
+            --danger: #c62828;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .nav-bar {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 50px;
+            z-index: 99;
+        }
+
+        .nav-link {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        header .subtitle {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        /* Input section */
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-row input {
+            flex: 1;
+            height: 48px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .input-row input:focus {
+            border-color: var(--primary);
+        }
+
+        .input-row .unit {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 24px;
+        }
+
+        /* Mode selector */
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .mode-btn .mode-label {
+            display: block;
+            font-size: 11px;
+            margin-top: 2px;
+            opacity: 0.8;
+        }
+
+        /* Search button */
+        .search-btn {
+            width: 100%;
+            height: 52px;
+            background: linear-gradient(135deg, var(--accent), #ff8f00);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 3px 12px rgba(255,111,0,0.3);
+            transition: transform 0.1s;
+        }
+
+        .search-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Results */
+        .results-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .results-header::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--success);
+            border-radius: 2px;
+        }
+
+        .result-summary {
+            background: #e8f5e9;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .no-result {
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .result-table thead {
+            background: var(--primary);
+            color: white;
+        }
+
+        .result-table th {
+            padding: 10px 8px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .result-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .result-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .result-table .boom-col {
+            font-weight: 700;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        .result-table .radius-col {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 15px;
+        }
+
+        .result-table .load-col {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .result-table .highlight {
+            background: #fff8e1 !important;
+        }
+
+        /* Outrigger info */
+        .outrigger-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: #e8eaf6;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Detail view */
+        .detail-section {
+            margin-top: 12px;
+        }
+
+        .detail-boom-header {
+            background: var(--primary-light);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px 8px 0 0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+
+        .detail-table th {
+            background: #e8eaf6;
+            padding: 8px 6px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--primary);
+            font-size: 11px;
+        }
+
+        .detail-table td {
+            padding: 7px 6px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-table .can-lift {
+            background: #e8f5e9;
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .detail-table .cannot-lift {
+            color: #ccc;
+        }
+
+        .detail-table .max-radius {
+            background: #fff8e1;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Warning */
+        .warning-box {
+            background: #fff3e0;
+            border: 1px solid #ffe0b2;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 11px;
+            color: #e65100;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        /* Offline indicator */
+        .offline-badge {
+            display: none;
+            background: var(--warning);
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        body.offline .offline-badge {
+            display: inline;
+        }
+
+        /* Scroll indicator for tables */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        /* Quick weight buttons */
+        .quick-weights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .quick-weight {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: white;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-weight:active, .quick-weight.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .hidden { display: none !important; }
+
+        /* Responsive adjustments */
+        @media (max-width: 360px) {
+            .container { padding: 12px; }
+            .card { padding: 16px; }
+            .result-table td, .result-table th { padding: 8px 4px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>GR-1000N 定格総荷重検索 <span class="offline-badge">OFFLINE</span></h1>
+    <div class="subtitle">TADANO CREVO 1000 G4 - アウトリガ最大張出(7.8m)</div>
+</header>
+
+<nav class="nav-bar">
+    <a href="index.html" class="nav-link active">ブーム</a>
+    <a href="jib.html" class="nav-link">ジブ</a>
+</nav>
+
+<div class="container">
+
+    <!-- Input Card -->
+    <div class="card">
+        <div class="card-title">荷重を入力</div>
+
+        <div class="input-group">
+            <label>吊り荷重（フック・吊具含む）</label>
+            <div class="input-row">
+                <input type="number" id="weightInput" placeholder="0.0" step="0.1" min="0" max="100" inputmode="decimal">
+                <span class="unit">t</span>
+            </div>
+            <div class="quick-weights">
+                <button class="quick-weight" data-weight="1">1t</button>
+                <button class="quick-weight" data-weight="2">2t</button>
+                <button class="quick-weight" data-weight="3">3t</button>
+                <button class="quick-weight" data-weight="5">5t</button>
+                <button class="quick-weight" data-weight="10">10t</button>
+                <button class="quick-weight" data-weight="15">15t</button>
+                <button class="quick-weight" data-weight="20">20t</button>
+                <button class="quick-weight" data-weight="30">30t</button>
+            </div>
+        </div>
+
+        <!-- Chart mode selector -->
+        <div class="input-group">
+            <label>性能モード</label>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="sc1_4t">
+                    Smart Chart 1
+                    <span class="mode-label">CW付 前方</span>
+                </button>
+                <button class="mode-btn" data-mode="360_4t">
+                    全周 360°
+                    <span class="mode-label">CW付</span>
+                </button>
+                <button class="mode-btn" data-mode="sc1_0t">
+                    Smart Chart 1
+                    <span class="mode-label">CW無 前方</span>
+                </button>
+                <button class="mode-btn" data-mode="360_0t">
+                    全周 360°
+                    <span class="mode-label">CW無</span>
+                </button>
+            </div>
+        </div>
+
+        <button class="search-btn" id="searchBtn" onclick="search()">検索</button>
+    </div>
+
+    <!-- Results Card -->
+    <div class="card hidden" id="resultsCard">
+        <div class="results-header" id="resultsHeader">検索結果</div>
+        <div id="resultsSummary"></div>
+        <div class="table-wrapper">
+            <table class="result-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>ブーム長さ</th>
+                        <th>最大作業半径</th>
+                        <th>定格総荷重</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+        </div>
+        <div class="outrigger-info">
+            ※ アウトリガ最大張出(7.8m) / ブーム定格総荷重表 基準
+        </div>
+    </div>
+
+    <!-- Detail Card -->
+    <div class="card hidden" id="detailCard">
+        <div class="card-title">詳細 - ブーム長さ別 作業半径と荷重</div>
+        <div class="tabs" id="detailTabs"></div>
+        <div id="detailContent"></div>
+    </div>
+
+    <!-- Warning -->
+    <div class="warning-box">
+        <strong>注意：</strong>本アプリの数値は参考値です。実際の作業では必ず正規の荷重表および AML を確認してください。
+        定格総荷重にはフック・吊具質量を含みます。アウトリガ張出幅に応じて性能は異なります。
+    </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+
+<script>
+    // Service Worker registration
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+
+    // Offline detection
+    function updateOnlineStatus() {
+        if (!navigator.onLine) {
+            document.body.classList.add('offline');
+        } else {
+            document.body.classList.remove('offline');
+        }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+</script>
+
+</body>
+</html>

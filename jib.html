@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a237e">
+    <title>GR-1000N ジブシミュレーター</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #1a237e;
+            --primary-light: #3949ab;
+            --accent: #ff6f00;
+            --accent-light: #ff8f00;
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --text: #212121;
+            --text-secondary: #757575;
+            --success: #2e7d32;
+            --warning: #f57f17;
+            --danger: #c62828;
+            --border: #e0e0e0;
+            --jib-color: #e65100;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--jib-color), var(--accent));
+            color: white;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        header h1 { font-size: 17px; font-weight: 700; }
+        header .subtitle { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+
+        /* Navigation */
+        .nav-bar {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 50px;
+            z-index: 99;
+        }
+
+        .nav-link {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-link.active {
+            color: var(--jib-color);
+            border-bottom-color: var(--jib-color);
+        }
+
+        .nav-link:first-child {
+            color: var(--text-secondary);
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--jib-color);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        /* Input */
+        .input-group { margin-bottom: 14px; }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-row input {
+            flex: 1;
+            height: 48px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .input-row input:focus { border-color: var(--jib-color); }
+        .input-row .unit { font-size: 16px; font-weight: 700; color: var(--text-secondary); }
+
+        /* Selector buttons */
+        .selector { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        .sel-btn {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sel-btn.active {
+            border-color: var(--jib-color);
+            background: var(--jib-color);
+            color: white;
+        }
+
+        /* Mode selector */
+        .mode-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .mode-btn {
+            flex: 1;
+            min-width: 45%;
+            padding: 8px 6px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            border-color: var(--jib-color);
+            background: var(--jib-color);
+            color: white;
+        }
+
+        .mode-btn .mode-label { display: block; font-size: 10px; margin-top: 2px; opacity: 0.8; }
+
+        /* Search button */
+        .search-btn {
+            width: 100%;
+            height: 52px;
+            background: linear-gradient(135deg, var(--jib-color), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 3px 12px rgba(230,81,0,0.3);
+        }
+
+        .search-btn:active { transform: scale(0.98); }
+
+        /* Canvas */
+        .canvas-wrapper {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        #craneCanvas {
+            width: 100%;
+            height: 280px;
+            display: block;
+        }
+
+        /* Results */
+        .result-summary {
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .result-summary.good { background: #e8f5e9; color: var(--success); }
+        .result-summary.best-height { background: #e3f2fd; color: #1565c0; }
+        .result-summary.bad { background: #ffebee; color: var(--danger); }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .result-table thead { background: var(--jib-color); color: white; }
+
+        .result-table th {
+            padding: 8px 4px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .result-table td {
+            padding: 8px 4px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-table tr:nth-child(even) { background: #fafafa; }
+        .result-table .clickable { cursor: pointer; }
+        .result-table .clickable:active { background: #fff3e0; }
+        .result-table .highlight { background: #fff8e1 !important; }
+
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        /* Detail table */
+        .detail-header {
+            background: var(--jib-color);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px 8px 0 0;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .detail-table th {
+            background: #fbe9e7;
+            padding: 8px 6px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--jib-color);
+            font-size: 11px;
+        }
+
+        .detail-table td {
+            padding: 7px 6px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-table .can-lift { background: #e8f5e9; color: var(--success); font-weight: 700; }
+        .detail-table .cannot-lift { color: #ccc; }
+        .detail-table .max-radius { background: #fff8e1; font-weight: 700; color: var(--accent); }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 12px;
+            padding-bottom: 4px;
+        }
+
+        .tab {
+            padding: 7px 10px;
+            border-radius: 8px;
+            background: #fbe9e7;
+            color: var(--jib-color);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            border: none;
+        }
+
+        .tab.active { background: var(--jib-color); color: white; }
+
+        /* Quick weight buttons */
+        .quick-weights { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+        .quick-weight {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: white;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .quick-weight:active, .quick-weight.selected {
+            background: var(--jib-color);
+            color: white;
+            border-color: var(--jib-color);
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border: 1px solid #ffe0b2;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 11px;
+            color: #e65100;
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: #1565c0;
+            margin-bottom: 12px;
+        }
+
+        /* Slider controls */
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .slider-label span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .slider-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--jib-color);
+        }
+
+        .slider-range {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            outline: none;
+        }
+
+        .slider-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--jib-color);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .slider-range::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--jib-color);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .slider-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .slider-info-item {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 10px 8px;
+            text-align: center;
+        }
+
+        .slider-info-item .si-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .slider-info-item .si-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .si-value.height-val { color: var(--success); }
+        .si-value.radius-val { color: var(--jib-color); }
+        .si-value.load-val { color: var(--primary); }
+        .si-value.ok { color: var(--success); }
+        .si-value.ng { color: var(--danger); }
+
+        .hidden { display: none !important; }
+
+        .offline-badge {
+            display: none;
+            background: var(--warning);
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        body.offline .offline-badge { display: inline; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>GR-1000N ジブシミュレーター <span class="offline-badge">OFFLINE</span></h1>
+    <div class="subtitle">SACO Jib II - 揚程・作業半径・荷重シミュレーション</div>
+</header>
+
+<nav class="nav-bar">
+    <a href="index.html" class="nav-link">ブーム</a>
+    <a href="jib.html" class="nav-link active">ジブ</a>
+</nav>
+
+<div class="container">
+
+    <!-- Input Card -->
+    <div class="card">
+        <div class="card-title">条件設定</div>
+
+        <div class="input-group">
+            <label>吊り荷重（フック・吊具含む）</label>
+            <div class="input-row">
+                <input type="number" id="weightInput" placeholder="0.0" step="0.1" min="0" max="5" inputmode="decimal">
+                <span class="unit">t</span>
+            </div>
+            <div class="quick-weights">
+                <button class="quick-weight" data-weight="0.5">0.5t</button>
+                <button class="quick-weight" data-weight="1.0">1.0t</button>
+                <button class="quick-weight" data-weight="1.5">1.5t</button>
+                <button class="quick-weight" data-weight="2.0">2.0t</button>
+                <button class="quick-weight" data-weight="2.5">2.5t</button>
+                <button class="quick-weight" data-weight="3.0">3.0t</button>
+                <button class="quick-weight" data-weight="4.0">4.0t</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>ジブ長さ</label>
+            <div class="selector" id="jibSelector">
+                <button class="sel-btn active" data-jib="8.4m">8.4m</button>
+                <button class="sel-btn" data-jib="13.1m">13.1m</button>
+                <button class="sel-btn" data-jib="17.7m">17.7m</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>ブーム長さ</label>
+            <div class="selector" id="boomSelector">
+                <button class="sel-btn active" data-boom="41.7m">41.7m</button>
+                <button class="sel-btn" data-boom="45.2m">45.2m</button>
+                <button class="sel-btn" data-boom="48.0m">48.0m</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>オフセット角度</label>
+            <div class="selector" id="offsetSelector">
+                <button class="sel-btn active" data-offset="5">5°</button>
+                <button class="sel-btn" data-offset="25">25°</button>
+                <button class="sel-btn" data-offset="45">45°</button>
+                <button class="sel-btn" data-offset="60">60°</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>性能モード</label>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="sc1_4t">
+                    Smart Chart 1
+                    <span class="mode-label">CW付 前方</span>
+                </button>
+                <button class="mode-btn" data-mode="360_4t">
+                    全周 360°
+                    <span class="mode-label">CW付</span>
+                </button>
+                <button class="mode-btn" data-mode="sc1_0t">
+                    Smart Chart 1
+                    <span class="mode-label">CW無 前方</span>
+                </button>
+                <button class="mode-btn" data-mode="360_0t">
+                    全周 360°
+                    <span class="mode-label">CW無</span>
+                </button>
+            </div>
+        </div>
+
+        <button class="search-btn" onclick="jibSearch()">検索</button>
+    </div>
+
+    <!-- Side View Card -->
+    <div class="card hidden" id="viewCard">
+        <div class="card-title">側面図（概算）</div>
+        <div class="canvas-wrapper">
+            <canvas id="craneCanvas"></canvas>
+        </div>
+
+        <!-- Radius Slider -->
+        <div class="slider-group" id="sliderGroup">
+            <div class="slider-label">
+                <span>作業半径</span>
+                <span class="slider-value" id="sliderValueLabel">--.- m</span>
+            </div>
+            <input type="range" class="slider-range" id="radiusSlider" min="0" max="100" step="1" value="50">
+            <div class="slider-info">
+                <div class="slider-info-item">
+                    <div class="si-label">揚程</div>
+                    <div class="si-value height-val" id="sliderHeight">--.-m</div>
+                </div>
+                <div class="slider-info-item">
+                    <div class="si-label">定格荷重</div>
+                    <div class="si-value load-val" id="sliderLoad">--.--t</div>
+                </div>
+                <div class="slider-info-item">
+                    <div class="si-label">判定</div>
+                    <div class="si-value" id="sliderJudge">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">スライダーを動かすと側面図がリアルタイムに変化します。揚程は計算による概算値です。</div>
+    </div>
+
+    <!-- Summary Results -->
+    <div class="card hidden" id="summaryCard">
+        <div class="card-title">全組合せ検索結果</div>
+        <div id="summaryContent"></div>
+        <div class="table-wrapper">
+            <table class="result-table" id="summaryTable">
+                <thead>
+                    <tr>
+                        <th>ジブ</th>
+                        <th>ブーム</th>
+                        <th>角度</th>
+                        <th>最大半径</th>
+                        <th>揚程</th>
+                        <th>荷重</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Detail Card -->
+    <div class="card hidden" id="detailCard">
+        <div class="card-title">詳細 - 作業半径・荷重・揚程一覧</div>
+        <div id="detailHeader" class="detail-header"></div>
+        <div class="table-wrapper">
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>作業半径<br>(m)</th>
+                        <th>定格荷重<br>(t)</th>
+                        <th>揚程<br>(m)</th>
+                        <th>起伏角<br>(°)</th>
+                        <th>判定</th>
+                    </tr>
+                </thead>
+                <tbody id="detailBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <strong>注意：</strong>本アプリの数値は参考値です。揚程は三角関数による計算概算値であり、実際のブーム・ジブのたわみは含まれていません。
+        実際の作業では必ず正規の荷重表およびAMLを確認してください。
+        ジブ定格総荷重にはつり具と補巻フック質量(110kg)を含みます。アウトリガ最大張出(7.8m)時の値です。
+    </div>
+</div>
+
+<script src="jib_data.js"></script>
+<script src="jib_calc.js"></script>
+<script src="jib_view.js"></script>
+<script>
+    // State
+    var jibCurrentMode = "sc1_4t";
+    var jibCurrentJib = "8.4m";
+    var jibCurrentBoom = "41.7m";
+    var jibCurrentOffset = "5";
+    var lastJibResults = null;
+    var currentDetailRows = null; // 現在表示中の詳細データ
+    var currentDetailWeight = null;
+
+    // Selector handlers
+    function setupSelectors(containerId, dataAttr, callback) {
+        var btns = document.querySelectorAll('#' + containerId + ' .sel-btn');
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                btns.forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                callback(btn.getAttribute('data-' + dataAttr));
+            });
+        });
+    }
+
+    setupSelectors('jibSelector', 'jib', function(v) { jibCurrentJib = v; });
+    setupSelectors('boomSelector', 'boom', function(v) { jibCurrentBoom = v; });
+    setupSelectors('offsetSelector', 'offset', function(v) { jibCurrentOffset = v; });
+
+    document.querySelectorAll('.mode-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            jibCurrentMode = btn.getAttribute('data-mode');
+        });
+    });
+
+    // Quick weight buttons
+    document.querySelectorAll('.quick-weight').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.getElementById('weightInput').value = btn.getAttribute('data-weight');
+            document.querySelectorAll('.quick-weight').forEach(function(b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+            jibSearch();
+        });
+    });
+
+    document.getElementById('weightInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); jibSearch(); }
+    });
+
+    // Main search
+    function jibSearch() {
+        var weightStr = document.getElementById('weightInput').value;
+        var weight = parseFloat(weightStr);
+
+        if (isNaN(weight) || weight <= 0) {
+            alert('荷重を入力してください');
+            return;
+        }
+
+        // 1. 選択中の組合せで詳細テーブル生成
+        var detail = generateJibTable(jibCurrentMode, jibCurrentJib, jibCurrentBoom, jibCurrentOffset, weight);
+
+        // 2. 全組合せ検索
+        var allResults = searchAllJibCombinations(jibCurrentMode, weight);
+
+        // 3. 最大揚程検索
+        var maxHeightCombo = findMaxHeightCombination(jibCurrentMode, weight);
+
+        lastJibResults = allResults;
+
+        displayJibResults(weight, detail, allResults, maxHeightCombo);
+    }
+
+    function displayJibResults(weight, detail, allResults, maxHeightCombo) {
+        var viewCard = document.getElementById('viewCard');
+        var summaryCard = document.getElementById('summaryCard');
+        var detailCard = document.getElementById('detailCard');
+
+        // --- Summary ---
+        summaryCard.classList.remove('hidden');
+        var summaryContent = document.getElementById('summaryContent');
+        var summaryBody = document.getElementById('summaryBody');
+
+        if (allResults.length === 0) {
+            summaryContent.innerHTML = '<div class="result-summary bad">' + weight + 't を吊れるジブの組合せがありません。</div>';
+            summaryBody.innerHTML = '';
+            viewCard.classList.add('hidden');
+            detailCard.classList.add('hidden');
+            return;
+        }
+
+        // Best radius
+        var bestRadius = allResults[0];
+        var html = '<div class="result-summary good">' +
+            '最大作業半径: ジブ ' + bestRadius.jibLen + ' + ブーム ' + bestRadius.boomLen +
+            ' (offset ' + bestRadius.offsetLabel + ') → ' + bestRadius.maxRadius + 'm</div>';
+
+        // Best height
+        if (maxHeightCombo) {
+            html += '<div class="result-summary best-height">' +
+                '最大揚程: ジブ ' + maxHeightCombo.jibLen + ' + ブーム ' + maxHeightCombo.boomLen +
+                ' (offset ' + JIB_OFFSET_LABELS[maxHeightCombo.offset] + ') → 半径 ' +
+                maxHeightCombo.radius + 'm で揚程 ' + maxHeightCombo.height.toFixed(1) + 'm</div>';
+        }
+
+        summaryContent.innerHTML = html;
+
+        // Summary table
+        var tbody = '';
+        for (var i = 0; i < allResults.length; i++) {
+            var r = allResults[i];
+            var isBest = (i === 0);
+            tbody += '<tr class="clickable ' + (isBest ? 'highlight' : '') + '" ' +
+                'onclick="selectCombo(\'' + r.jibLen + '\',\'' + r.boomLen + '\',\'' + r.offset + '\')">' +
+                '<td style="font-weight:700;color:' + (isBest ? 'var(--jib-color)' : '') + '">' + r.jibLen + '</td>' +
+                '<td>' + r.boomLen + '</td>' +
+                '<td>' + r.offsetLabel + '</td>' +
+                '<td style="font-weight:700;color:var(--success)">' + r.maxRadius + 'm</td>' +
+                '<td>' + r.heightAtMax.toFixed(1) + 'm</td>' +
+                '<td style="font-size:11px;color:var(--text-secondary)">' + r.loadAtMax + 't</td>' +
+                '</tr>';
+        }
+        summaryBody.innerHTML = tbody;
+
+        // --- Detail ---
+        if (detail) {
+            showJibDetail(weight, detail);
+        }
+
+        summaryCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function selectCombo(jibLen, boomLen, offset) {
+        // Update selectors
+        jibCurrentJib = jibLen;
+        jibCurrentBoom = boomLen;
+        jibCurrentOffset = offset;
+
+        document.querySelectorAll('#jibSelector .sel-btn').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-jib') === jibLen);
+        });
+        document.querySelectorAll('#boomSelector .sel-btn').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-boom') === boomLen);
+        });
+        document.querySelectorAll('#offsetSelector .sel-btn').forEach(function(b) {
+            b.classList.toggle('active', b.getAttribute('data-offset') === offset);
+        });
+
+        var weight = parseFloat(document.getElementById('weightInput').value);
+        var detail = generateJibTable(jibCurrentMode, jibLen, boomLen, offset, weight);
+        if (detail) showJibDetail(weight, detail);
+    }
+
+    function showJibDetail(weight, detail) {
+        var viewCard = document.getElementById('viewCard');
+        var detailCard = document.getElementById('detailCard');
+
+        viewCard.classList.remove('hidden');
+        detailCard.classList.remove('hidden');
+
+        // 詳細データを保存（スライダー用）
+        currentDetailRows = detail.rows;
+        currentDetailWeight = weight;
+
+        // Header
+        document.getElementById('detailHeader').textContent =
+            'ジブ ' + detail.jibLen + ' + ブーム ' + detail.boomLen + ' / オフセット ' + JIB_OFFSET_LABELS[detail.offset];
+
+        // Detail table
+        var tbody = '';
+        for (var i = 0; i < detail.rows.length; i++) {
+            var row = detail.rows[i];
+            var isMax = (row.radius === detail.maxRadius && row.canLift);
+            var cls = '';
+            var status = '';
+
+            if (isMax) { cls = 'max-radius'; status = '← MAX'; }
+            else if (row.canLift) { cls = 'can-lift'; status = 'OK'; }
+            else { cls = 'cannot-lift'; status = 'NG'; }
+
+            tbody += '<tr class="' + cls + '" id="detailRow' + i + '" onclick="selectSliderIndex(' + i + ')">' +
+                '<td>' + row.radius + '</td>' +
+                '<td>' + row.load + '</td>' +
+                '<td>' + row.height.toFixed(1) + '</td>' +
+                '<td>' + row.boomAngle.toFixed(1) + '</td>' +
+                '<td>' + status + '</td>' +
+                '</tr>';
+        }
+        document.getElementById('detailBody').innerHTML = tbody;
+
+        // スライダー初期化
+        initSlider(detail);
+
+        // Draw canvas with max radius highlight
+        var highlightR = detail.maxRadius;
+        var initIdx = 0;
+        for (var i = 0; i < detail.rows.length; i++) {
+            if (detail.rows[i].radius === highlightR && detail.rows[i].canLift) {
+                initIdx = i;
+                break;
+            }
+        }
+        updateSliderDisplay(initIdx);
+
+        detailCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // スライダー初期化
+    function initSlider(detail) {
+        var slider = document.getElementById('radiusSlider');
+        slider.min = 0;
+        slider.max = detail.rows.length - 1;
+
+        // maxRadiusのインデックスを初期値に
+        var initIdx = 0;
+        for (var i = 0; i < detail.rows.length; i++) {
+            if (detail.rows[i].radius === detail.maxRadius && detail.rows[i].canLift) {
+                initIdx = i;
+                break;
+            }
+        }
+        slider.value = initIdx;
+    }
+
+    // スライダーの値変更時
+    document.getElementById('radiusSlider').addEventListener('input', function() {
+        var idx = parseInt(this.value);
+        updateSliderDisplay(idx);
+    });
+
+    // テーブル行タップでスライダーも連動
+    function selectSliderIndex(idx) {
+        document.getElementById('radiusSlider').value = idx;
+        updateSliderDisplay(idx);
+        document.getElementById('viewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // スライダー表示更新（図 + 数値 + テーブルハイライト）
+    function updateSliderDisplay(idx) {
+        if (!currentDetailRows || idx < 0 || idx >= currentDetailRows.length) return;
+
+        var row = currentDetailRows[idx];
+        var weight = currentDetailWeight;
+
+        // 数値更新
+        document.getElementById('sliderValueLabel').textContent = row.radius + ' m';
+        document.getElementById('sliderHeight').textContent = row.height.toFixed(1) + 'm';
+        document.getElementById('sliderLoad').textContent = row.load + 't';
+
+        var judgeEl = document.getElementById('sliderJudge');
+        if (row.canLift) {
+            judgeEl.textContent = 'OK';
+            judgeEl.className = 'si-value ok';
+        } else {
+            judgeEl.textContent = 'NG';
+            judgeEl.className = 'si-value ng';
+        }
+
+        // テーブルハイライト更新
+        for (var i = 0; i < currentDetailRows.length; i++) {
+            var tr = document.getElementById('detailRow' + i);
+            if (tr) {
+                if (i === idx) {
+                    tr.style.outline = '2px solid ' + (row.canLift ? '#2e7d32' : '#c62828');
+                    tr.style.outlineOffset = '-2px';
+                } else {
+                    tr.style.outline = 'none';
+                }
+            }
+        }
+
+        // 側面図更新
+        drawCraneSideView('craneCanvas', jibCurrentBoom, jibCurrentJib, jibCurrentOffset, row.radius, weight);
+    }
+
+    function updateCanvas(radius, weight) {
+        drawCraneSideView('craneCanvas', jibCurrentBoom, jibCurrentJib, jibCurrentOffset, radius, weight);
+        document.getElementById('viewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Offline
+    function updateOnlineStatus() {
+        document.body.classList.toggle('offline', !navigator.onLine);
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // SW
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+</script>
+
+</body>
+</html>

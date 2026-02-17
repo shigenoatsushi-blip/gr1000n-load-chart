@@ -1,0 +1,25 @@
+{
+    "name": "GR-1000N 定格総荷重検索",
+    "short_name": "GR-1000N",
+    "description": "タダノ GR-1000N ラフテレーンクレーン 定格総荷重検索アプリ",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#1a237e",
+    "theme_color": "#1a237e",
+    "lang": "ja",
+    "icons": [
+        {
+            "src": "icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
