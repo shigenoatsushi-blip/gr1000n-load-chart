@@ -5,8 +5,7 @@
  * 1. Stripeダッシュボード → Payment Links → 該当リンクを選択
  * 2. 「支払い後」→「ウェブサイトにリダイレクト」を選択
  * 3. リダイレクトURLを以下に設定:
- *    https://[あなたのGitHub PagesのURL]/?purchased=success
- *    例: https://yourname.github.io/gr1000n-load-chart/?purchased=success
+ *    https://shigenoatsushi-blip.github.io/gr1000n-load-chart/?purchased=success
  * 4. 下記 STRIPE_PAYMENT_LINK を実際のURLに書き換える
  */
 
