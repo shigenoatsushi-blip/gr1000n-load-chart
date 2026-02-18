@@ -1,9 +1,10 @@
-var CACHE_NAME = 'gr1000n-v4';
+var CACHE_NAME = 'gr1000n-v5';
 var ASSETS = [
     './',
     './index.html',
     './data.js',
     './app.js',
+    './auth.js',
     './paywall.js',
     './jib.html',
     './jib_data.js',
