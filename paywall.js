@@ -14,9 +14,15 @@
   // ====================================================
   // 設定値（ここを書き換えてください）
   // ====================================================
-  var STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/XXXXXXXXXXXXX'; // ← StripeのPayment Link URLに変更
+  var STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_14A4gz8xDgmbfrx7iR53O00'; // Stripeテストモード用URL
   var PRICE_LABEL = '1,480円';
   var TRIAL_DAYS = 7;
+
+  // ---- テストモード設定 ----
+  // TEST_MODE = true のとき：日数のかわりに分単位でトライアルを計測（動作確認用）
+  // 本番リリース前に false に戻すこと
+  var TEST_MODE = true;
+  var TRIAL_MINUTES = 3; // テスト時のトライアル時間（分）
   // ====================================================
 
   var KEY_TRIAL_START = 'gr1000n_trial_start';
@@ -34,9 +40,16 @@
     }
   }
 
-  /** トライアル残り日数を返す（0以下なら期限切れ） */
+  /** トライアル残り時間を返す（0以下なら期限切れ）
+   *  TEST_MODE時は「残り分数」、本番時は「残り日数」を返す */
   function getTrialDaysRemaining() {
     var start = parseInt(localStorage.getItem(KEY_TRIAL_START) || '0', 10);
+    if (TEST_MODE) {
+      if (!start) return TRIAL_MINUTES;
+      var elapsed = Date.now() - start;
+      var minutesElapsed = Math.floor(elapsed / (1000 * 60));
+      return Math.max(0, TRIAL_MINUTES - minutesElapsed);
+    }
     if (!start) return TRIAL_DAYS;
     var elapsed = Date.now() - start;
     var daysElapsed = Math.floor(elapsed / (1000 * 60 * 60 * 24));
@@ -74,7 +87,8 @@
     banner.id = 'paywall-trial-banner';
 
     var urgentClass = daysRemaining <= 2 ? ' paywall-urgent' : '';
-    var dayText = daysRemaining === 0 ? '本日まで' : '残り' + daysRemaining + '日';
+    var unit = TEST_MODE ? '分' : '日';
+    var dayText = daysRemaining === 0 ? '本日まで' : '残り' + daysRemaining + unit;
 
     banner.innerHTML =
       '<span class="paywall-trial-text' + urgentClass + '">' +
@@ -104,7 +118,7 @@
       '<div class="paywall-box">' +
       '<div class="paywall-icon" aria-hidden="true">🏗</div>' +
       '<h2 id="paywall-title">無料トライアル期間が終了しました</h2>' +
-      '<p>7日間の無料トライアルをご利用いただき、ありがとうございます。</p>' +
+      '<p>' + (TEST_MODE ? TRIAL_MINUTES + '分間' : TRIAL_DAYS + '日間') + 'の無料トライアルをご利用いただき、ありがとうございます。</p>' +
       '<div class="paywall-price-block">' +
       '<div class="paywall-price-label">買い切り</div>' +
       '<div class="paywall-price">' + PRICE_LABEL + '</div>' +
