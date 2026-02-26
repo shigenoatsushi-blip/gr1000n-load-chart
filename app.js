@@ -41,17 +41,20 @@ function search() {
         return;
     }
 
-    var data = LOAD_DATA[currentMode];
-    if (!data) return;
+    var modeData = LOAD_DATA[currentMode];
+    if (!modeData) return;
 
     var results = [];
 
-    // For each boom length, find the maximum working radius where rated load >= input weight
-    for (var i = 0; i < BOOM_ORDER.length; i++) {
-        var boomKey = BOOM_ORDER[i];
-        if (!data[boomKey]) continue;
+    // IDごとに最大作業半径を検索
+    for (var i = 0; i < ID_ORDER.length; i++) {
+        var id = ID_ORDER[i];
+        var radiusData = modeData[id];
+        if (!radiusData) continue;
 
-        var radiusData = data[boomKey];
+        var blockInfo = BLOCK_ID_MAP[id];
+        if (!blockInfo) continue;
+
         var radii = Object.keys(radiusData).map(Number).sort(function(a, b) { return a - b; });
 
         var maxRadius = null;
@@ -77,8 +80,9 @@ function search() {
 
         if (maxRadius !== null) {
             results.push({
-                boom: boomKey,
-                boomLabel: BOOM_LABELS[boomKey],
+                id: id,
+                boomLength: blockInfo.length,
+                boomLabel: blockInfo.length + ' (ID' + id + ')',
                 maxRadius: maxRadius,
                 loadAtMaxRadius: loadAtMaxRadius,
                 allRadii: allRadiusInfo
@@ -128,9 +132,10 @@ function displayResults(weight, results) {
     var html = '';
     for (var i = 0; i < sorted.length; i++) {
         var r = sorted[i];
-        var isBest = (r.boom === best.boom && r.maxRadius === best.maxRadius);
-        html += '<tr class="' + (isBest ? 'highlight' : '') + '" onclick="showDetail(\'' + r.boom + '\')">' +
-            '<td class="boom-col">' + r.boomLabel + '</td>' +
+        var isBest = (r.id === best.id);
+        html += '<tr class="' + (isBest ? 'highlight' : '') + '" onclick="showDetail(' + r.id + ')">' +
+            '<td class="boom-col">' + r.boomLength + '</td>' +
+            '<td style="font-weight: 700; color: var(--accent); font-size: 14px;">ID ' + r.id + '</td>' +
             '<td class="radius-col">' + r.maxRadius + ' m</td>' +
             '<td class="load-col">' + r.loadAtMaxRadius + ' t</td>' +
             '</tr>';
@@ -139,7 +144,7 @@ function displayResults(weight, results) {
 
     // Show detail for the best boom by default
     buildDetailTabs(results);
-    showDetail(best.boom);
+    showDetail(best.id);
 
     // Scroll to results
     card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -152,13 +157,13 @@ function buildDetailTabs(results) {
     var html = '';
     for (var i = 0; i < sorted.length; i++) {
         var r = sorted[i];
-        html += '<button class="tab" data-boom="' + r.boom + '" onclick="showDetail(\'' + r.boom + '\')">' +
+        html += '<button class="tab" data-id="' + r.id + '" onclick="showDetail(' + r.id + ')">' +
             r.boomLabel + '</button>';
     }
     tabsEl.innerHTML = html;
 }
 
-function showDetail(boomKey) {
+function showDetail(id) {
     if (!lastResults) return;
 
     var detailCard = document.getElementById('detailCard');
@@ -166,13 +171,13 @@ function showDetail(boomKey) {
 
     // Update tabs
     document.querySelectorAll('#detailTabs .tab').forEach(function(t) {
-        t.classList.toggle('active', t.getAttribute('data-boom') === boomKey);
+        t.classList.toggle('active', parseInt(t.getAttribute('data-id')) === id);
     });
 
     // Find result
     var result = null;
     for (var i = 0; i < lastResults.length; i++) {
-        if (lastResults[i].boom === boomKey) {
+        if (lastResults[i].id === id) {
             result = lastResults[i];
             break;
         }
@@ -181,8 +186,9 @@ function showDetail(boomKey) {
 
     var contentEl = document.getElementById('detailContent');
     var weight = parseFloat(document.getElementById('weightInput').value);
+    var blockInfo = BLOCK_ID_MAP[id];
 
-    var html = '<div class="detail-boom-header">ブーム ' + result.boomLabel + ' の全作業半径</div>';
+    var html = '<div class="detail-boom-header">ブーム ' + result.boomLength + ' (ブロックID ' + id + ' / ' + (blockInfo ? blockInfo.description : '') + ') の全作業半径</div>';
     html += '<table class="detail-table"><thead><tr>' +
         '<th>作業半径(m)</th><th>定格総荷重(t)</th><th>判定</th>' +
         '</tr></thead><tbody>';
@@ -214,3 +220,82 @@ function showDetail(boomKey) {
     html += '</tbody></table>';
     contentEl.innerHTML = html;
 }
+
+// ============================================================
+// ブロックID検索機能
+// ============================================================
+
+function searchBlockId() {
+    var input = document.getElementById('blockIdInput');
+    var blockId = parseInt(input.value);
+    var resultDiv = document.getElementById('blockIdResult');
+    var resultText = document.getElementById('blockIdResultText');
+
+    if (isNaN(blockId) || blockId < 1 || blockId > 29) {
+        alert('ブロックIDを1〜29の範囲で入力してください');
+        return;
+    }
+
+    var blockInfo = getBlockInfo(blockId);
+
+    if (blockInfo) {
+        resultDiv.classList.remove('hidden');
+        resultText.innerHTML =
+            '<div style="font-size: 16px; margin-bottom: 4px;"><strong>ブロックID ' + blockId + '</strong></div>' +
+            '<div style="font-size: 18px; font-weight: 700; color: #0d47a1;">ブーム長さ: ' + blockInfo.length + '</div>' +
+            '<div style="font-size: 12px; margin-top: 4px; opacity: 0.8;">' + blockInfo.description + '</div>';
+    } else {
+        resultDiv.classList.remove('hidden');
+        resultText.innerHTML =
+            '<div style="color: var(--danger);"><strong>ブロックID ' + blockId + '</strong> は登録されていません</div>';
+    }
+
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function toggleBlockIdTable() {
+    var tableDiv = document.getElementById('blockIdTable');
+    var btnText = document.getElementById('toggleBtnText');
+
+    blockIdTableVisible = !blockIdTableVisible;
+
+    if (blockIdTableVisible) {
+        tableDiv.classList.remove('hidden');
+        btnText.textContent = '▲ 一覧表を非表示';
+        generateBlockIdTable();
+        tableDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        tableDiv.classList.add('hidden');
+        btnText.textContent = '▼ 一覧表を表示';
+    }
+}
+
+var blockIdTableVisible = false;
+
+function generateBlockIdTable() {
+    var tbody = document.getElementById('blockIdTableBody');
+    var html = '';
+
+    for (var id = 1; id <= 29; id++) {
+        var blockInfo = getBlockInfo(id);
+        var hasData = LOAD_DATA['sc1_4t'] && LOAD_DATA['sc1_4t'][id];
+        if (blockInfo) {
+            html += '<tr>' +
+                '<td style="font-weight: 700; color: var(--primary);">ID ' + id + '</td>' +
+                '<td style="font-weight: 700; color: var(--success);">' + blockInfo.length + '</td>' +
+                '<td style="font-size: 11px; color: var(--text-secondary);">' + blockInfo.description +
+                (hasData ? '' : ' <span style="color:var(--warning);">※データ未登録</span>') + '</td>' +
+                '</tr>';
+        }
+    }
+
+    tbody.innerHTML = html;
+}
+
+// Enter key triggers block ID search
+document.getElementById('blockIdInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        searchBlockId();
+    }
+});

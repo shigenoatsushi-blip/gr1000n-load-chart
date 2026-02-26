@@ -479,6 +479,48 @@
 
 <div class="container">
 
+    <!-- Block ID Search Card -->
+    <div class="card">
+        <div class="card-title">ブロックID検索</div>
+
+        <div class="input-group">
+            <label>AML画面のブロックIDを入力</label>
+            <div class="input-row">
+                <input type="number" id="blockIdInput" placeholder="例: 1" step="1" min="1" max="29" inputmode="numeric">
+                <button class="search-btn" onclick="searchBlockId()" style="margin-left: 8px; width: auto; padding: 0 20px;">検索</button>
+            </div>
+        </div>
+
+        <div id="blockIdResult" class="hidden" style="margin-top: 12px;">
+            <div style="background: #e3f2fd; border-radius: 10px; padding: 14px 16px; font-size: 14px; color: #1565c0; font-weight: 600;">
+                <div id="blockIdResultText"></div>
+            </div>
+        </div>
+
+        <div id="blockIdTable" class="hidden" style="margin-top: 12px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">登録済みブロックID一覧</div>
+            <div class="table-wrapper">
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>ブロックID</th>
+                            <th>ブーム長さ</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blockIdTableBody"></tbody>
+                </table>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                ※ ID1〜29 全て登録済み（性能ブロック1〜12）
+            </div>
+        </div>
+
+        <button onclick="toggleBlockIdTable()" style="width: 100%; margin-top: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer;">
+            <span id="toggleBtnText">▼ 一覧表を表示</span>
+        </button>
+    </div>
+
     <!-- Input Card -->
     <div class="card">
         <div class="card-title">荷重を入力</div>
@@ -521,6 +563,10 @@
                     全周 360°
                     <span class="mode-label">CW無</span>
                 </button>
+                <button class="mode-btn" data-mode="sc2_4t">
+                    Smart Chart 2
+                    <span class="mode-label">CW付 前方</span>
+                </button>
             </div>
         </div>
 
@@ -536,6 +582,7 @@
                 <thead>
                     <tr>
                         <th>ブーム長さ</th>
+                        <th>ブロックID</th>
                         <th>最大作業半径</th>
                         <th>定格総荷重</th>
                     </tr>
