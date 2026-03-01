@@ -4,27 +4,28 @@ var currentMode = "sc1_4t";
 var lastResults = null;
 
 // Mode selector
-document.querySelectorAll('.mode-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+document.querySelectorAll('.mode-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.mode-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         currentMode = btn.getAttribute('data-mode');
     });
 });
 
 // Quick weight buttons
-document.querySelectorAll('.quick-weight').forEach(function(btn) {
-    btn.addEventListener('click', function() {
+document.querySelectorAll('.quick-weight').forEach(function (btn) {
+    if (btn.classList.contains('quick-radius')) return; // 半径ボタンはスキップ
+    btn.addEventListener('click', function () {
         var w = btn.getAttribute('data-weight');
         document.getElementById('weightInput').value = w;
-        document.querySelectorAll('.quick-weight').forEach(function(b) { b.classList.remove('selected'); });
+        document.querySelectorAll('.quick-weight').forEach(function (b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
         search();
     });
 });
 
 // Enter key triggers search
-document.getElementById('weightInput').addEventListener('keydown', function(e) {
+document.getElementById('weightInput').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         e.preventDefault();
         search();
@@ -55,7 +56,7 @@ function search() {
         var blockInfo = BLOCK_ID_MAP[id];
         if (!blockInfo) continue;
 
-        var radii = Object.keys(radiusData).map(Number).sort(function(a, b) { return a - b; });
+        var radii = Object.keys(radiusData).map(Number).sort(function (a, b) { return a - b; });
 
         var maxRadius = null;
         var loadAtMaxRadius = null;
@@ -126,8 +127,13 @@ function displayResults(weight, results) {
         ' (定格 ' + best.loadAtMaxRadius + 't)' +
         '</div>';
 
-    // Build table - sorted by max radius descending
-    var sorted = results.slice().sort(function(a, b) { return b.maxRadius - a.maxRadius; });
+    // Build table - sorted by max radius descending, then load descending
+    var sorted = results.slice().sort(function (a, b) {
+        if (b.maxRadius !== a.maxRadius) {
+            return b.maxRadius - a.maxRadius;
+        }
+        return b.loadAtMaxRadius - a.loadAtMaxRadius;
+    });
 
     var html = '';
     for (var i = 0; i < sorted.length; i++) {
@@ -152,7 +158,12 @@ function displayResults(weight, results) {
 
 function buildDetailTabs(results) {
     var tabsEl = document.getElementById('detailTabs');
-    var sorted = results.slice().sort(function(a, b) { return b.maxRadius - a.maxRadius; });
+    var sorted = results.slice().sort(function (a, b) {
+        if (b.maxRadius !== a.maxRadius) {
+            return b.maxRadius - a.maxRadius;
+        }
+        return b.loadAtMaxRadius - a.loadAtMaxRadius;
+    });
 
     var html = '';
     for (var i = 0; i < sorted.length; i++) {
@@ -170,7 +181,7 @@ function showDetail(id) {
     detailCard.classList.remove('hidden');
 
     // Update tabs
-    document.querySelectorAll('#detailTabs .tab').forEach(function(t) {
+    document.querySelectorAll('#detailTabs .tab').forEach(function (t) {
         t.classList.toggle('active', parseInt(t.getAttribute('data-id')) === id);
     });
 
@@ -293,9 +304,114 @@ function generateBlockIdTable() {
 }
 
 // Enter key triggers block ID search
-document.getElementById('blockIdInput').addEventListener('keydown', function(e) {
+document.getElementById('blockIdInput').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
         e.preventDefault();
         searchBlockId();
     }
 });
+
+// ============================================================
+// 作業半径から定格総荷重を検索する機能
+// ============================================================
+
+// Quick radius buttons
+document.querySelectorAll('.quick-radius').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var r = btn.getAttribute('data-radius');
+        document.getElementById('radiusInput').value = r;
+        document.querySelectorAll('.quick-radius').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        searchByRadius();
+    });
+});
+
+// Enter key triggers radius search
+document.getElementById('radiusInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        searchByRadius();
+    }
+});
+
+function searchByRadius() {
+    var radiusStr = document.getElementById('radiusInput').value;
+    var radius = parseFloat(radiusStr);
+
+    if (isNaN(radius) || radius <= 0) {
+        alert('作業半径を入力してください');
+        return;
+    }
+
+    var modeData = LOAD_DATA[currentMode];
+    if (!modeData) return;
+
+    var results = [];
+
+    for (var i = 0; i < ID_ORDER.length; i++) {
+        var id = ID_ORDER[i];
+        var radiusData = modeData[id];
+        if (!radiusData) continue;
+
+        var blockInfo = BLOCK_ID_MAP[id];
+        if (!blockInfo) continue;
+
+        // 入力された半径のデータがあるか確認
+        var load = radiusData[radius];
+        if (load !== undefined) {
+            results.push({
+                id: id,
+                boomLength: blockInfo.length,
+                boomLabel: blockInfo.length + ' (ID' + id + ')',
+                load: load,
+                description: blockInfo.description
+            });
+        }
+    }
+
+    displayRadiusResults(radius, results);
+}
+
+function displayRadiusResults(radius, results) {
+    var card = document.getElementById('radiusResultsCard');
+    var header = document.getElementById('radiusResultsHeader');
+    var summary = document.getElementById('radiusResultsSummary');
+    var tbody = document.getElementById('radiusResultsBody');
+
+    card.classList.remove('hidden');
+
+    header.textContent = '作業半径 ' + radius + 'm の検索結果 (' + MODE_LABELS[currentMode] + ')';
+
+    if (results.length === 0) {
+        summary.innerHTML = '<div class="no-result">作業半径 ' + radius + 'm のデータが登録されているIDがありません。</div>';
+        tbody.innerHTML = '';
+        return;
+    }
+
+    // 定格総荷重の降順でソート
+    var sorted = results.slice().sort(function (a, b) {
+        return b.load - a.load;
+    });
+
+    // 最大荷重のものをハイライト
+    var best = sorted[0];
+
+    summary.innerHTML = '<div class="result-summary">' +
+        '作業半径 ' + radius + 'm で最大荷重: ブーム ' + best.boomLabel +
+        ' → ' + best.load + 't' +
+        '</div>';
+
+    var html = '';
+    for (var i = 0; i < sorted.length; i++) {
+        var r = sorted[i];
+        var isBest = (r.id === best.id);
+        html += '<tr class="' + (isBest ? 'highlight' : '') + '">' +
+            '<td class="boom-col">' + r.boomLength + '</td>' +
+            '<td style="font-weight: 700; color: var(--accent); font-size: 14px;">ID ' + r.id + '</td>' +
+            '<td style="font-weight: 700; color: var(--success); font-size: 15px;">' + r.load + ' t</td>' +
+            '</tr>';
+    }
+    tbody.innerHTML = html;
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
