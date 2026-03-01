@@ -359,14 +359,33 @@ function searchByRadius() {
         var blockInfo = BLOCK_ID_MAP[id];
         if (!blockInfo) continue;
 
-        // 入力された半径のデータがあるか確認
-        var load = radiusData[radius];
-        if (load !== undefined) {
+        var radii = Object.keys(radiusData).map(Number).sort(function (a, b) { return a - b; });
+
+        var matchedRadius = null;
+        for (var j = 0; j < radii.length; j++) {
+            if (radii[j] === radius) {
+                matchedRadius = radii[j];
+                break;
+            } else if (radii[j] > radius) {
+                // 入力半径を超えたら、その1つ前（直近の小さい値）を採用する
+                if (j > 0) {
+                    matchedRadius = radii[j - 1];
+                }
+                break;
+            }
+        }
+        // 全てのデータが入力半径より小さい場合は、最大の半径を採用
+        if (matchedRadius === null && radii.length > 0 && radii[radii.length - 1] < radius) {
+            matchedRadius = radii[radii.length - 1];
+        }
+
+        if (matchedRadius !== null) {
             results.push({
                 id: id,
                 boomLength: blockInfo.length,
                 boomLabel: blockInfo.length + ' (ID' + id + ')',
-                load: load,
+                matchedRadius: matchedRadius,
+                load: radiusData[matchedRadius],
                 description: blockInfo.description
             });
         }
@@ -408,10 +427,17 @@ function displayRadiusResults(radius, results) {
     for (var i = 0; i < sorted.length; i++) {
         var r = sorted[i];
         var isBest = (r.id === best.id);
+
+        // 入力半径と一致しない場合（補完された場合）、使用した半径を表示
+        var radiusNote = '';
+        if (r.matchedRadius !== radius) {
+            radiusNote = '<div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">(' + r.matchedRadius + 'mの値)</div>';
+        }
+
         html += '<tr class="' + (isBest ? 'highlight' : '') + '">' +
             '<td class="boom-col">' + r.boomLength + '</td>' +
             '<td style="font-weight: 700; color: var(--accent); font-size: 14px;">ID ' + r.id + '</td>' +
-            '<td style="font-weight: 700; color: var(--success); font-size: 15px;">' + r.load + ' t</td>' +
+            '<td><span style="font-weight: 700; color: var(--success); font-size: 15px;">' + r.load + ' t</span>' + radiusNote + '</td>' +
             '</tr>';
     }
     tbody.innerHTML = html;

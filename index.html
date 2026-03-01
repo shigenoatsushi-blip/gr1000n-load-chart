@@ -488,49 +488,6 @@
 
 <body>
 
-    <!-- パスワードロック画面 -->
-    <div id="lockScreen"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a237e,#3949ab); z-index:9999; display:flex; align-items:center; justify-content:center;">
-        <div
-            style="background:white; border-radius:16px; padding:40px 32px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.3); max-width:320px; width:90%;">
-            <div style="font-size:24px; font-weight:700; color:#1a237e; margin-bottom:8px;">GR-1000N</div>
-            <div style="font-size:13px; color:#757575; margin-bottom:24px;">パスワードを入力してください</div>
-            <input type="password" id="pwInput" placeholder="パスワード"
-                style="width:100%; height:48px; border:2px solid #e0e0e0; border-radius:10px; padding:0 16px; font-size:16px; outline:none; text-align:center; margin-bottom:16px;">
-            <button id="pwBtn"
-                style="width:100%; height:48px; background:linear-gradient(135deg,#ff6f00,#ff8f00); color:white; border:none; border-radius:10px; font-size:16px; font-weight:700; cursor:pointer;">ログイン</button>
-            <div id="pwError" style="color:#c62828; font-size:13px; margin-top:12px; display:none;">パスワードが違います</div>
-        </div>
-    </div>
-    <script>
-        (function () {
-            var KEY = 'gr1000_auth';
-            var HASH = '5d41402abc4b2a76b9719d911017c592';
-            function md5(s) {/* simple hash check */
-                return s === 'ohnoya' ? true : false;
-            }
-            if (sessionStorage.getItem(KEY) === '1') {
-                document.getElementById('lockScreen').style.display = 'none';
-            } else {
-                document.getElementById('lockScreen').style.display = 'flex';
-            }
-            document.getElementById('pwBtn').addEventListener('click', tryLogin);
-            document.getElementById('pwInput').addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') tryLogin();
-            });
-            function tryLogin() {
-                var pw = document.getElementById('pwInput').value;
-                if (md5(pw)) {
-                    sessionStorage.setItem(KEY, '1');
-                    document.getElementById('lockScreen').style.display = 'none';
-                } else {
-                    document.getElementById('pwError').style.display = 'block';
-                    document.getElementById('pwInput').value = '';
-                    document.getElementById('pwInput').focus();
-                }
-            }
-        })();
-    </script>
 
     <header>
         <h1>GR-1000N 定格総荷重検索 <span class="offline-badge">OFFLINE</span></h1>
