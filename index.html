@@ -168,12 +168,14 @@
         /* Mode selector */
         .mode-selector {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 16px;
         }
 
         .mode-btn {
-            flex: 1;
+            flex: 1 1 calc(33.33% - 6px);
+            min-width: 0;
             padding: 10px 8px;
             border: 2px solid var(--border);
             border-radius: 10px;
