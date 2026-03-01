@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GR-1000N 定格総荷重検索アプリ | 次世代のクレーン業務支援</title>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a237e;
+            /* Navy base */
+            --primary-light: #3949ab;
+            --primary-dark: #000051;
+            --accent: #ff6f00;
+            /* Orange neon */
+            --accent-light: #ffa040;
+            --text-main: #ffffff;
+            --text-sub: #b0bec5;
+            --bg-dark: #0b0f24;
+            --glass-bg: rgba(26, 35, 126, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(255, 111, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(26, 35, 126, 0.15) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* 共通Glassmorphismユーティリティ */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* ヘッダー */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        header.scrolled {
+            background: rgba(11, 15, 36, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-btn {
+            background: var(--accent);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 111, 0, 0.4);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 111, 0, 0.6);
+            background: var(--accent-light);
+        }
+
+        /* ヒーローセクション */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+            position: relative;
+        }
+
+        /* サイバーグリッド背景 */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            perspective: 1000px;
+            transform-origin: bottom;
+            transform: rotateX(60deg) translateY(-100px) scale(3);
+            opacity: 0.3;
+        }
+
+        .hero-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 1000px;
+            gap: 40px;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #ffffff, #b0bec5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-title span.highlight {
+            background: linear-gradient(to right, var(--accent), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-sub);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            padding: 16px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 111, 0, 0.4);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 111, 0, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            padding: 16px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s;
+            border: 2px solid var(--glass-border);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* アプリ画面モックアップ */
+        .app-mockup {
+            margin-top: 60px;
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .app-mockup img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            transform: perspective(1000px) rotateX(5deg);
+            transition: transform 0.5s ease;
+        }
+
+        .app-mockup:hover img {
+            transform: perspective(1000px) rotateX(0deg);
+        }
+
+        /* セクション共通 */
+        section {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 900;
+            inline-size: fit-content;
+            margin: 0 auto;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        /* Feature (特徴) セクション */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            padding: 40px 30px;
+            text-align: left;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            color: var(--accent);
+            margin-bottom: 20px;
+            background: rgba(255, 111, 0, 0.1);
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+        }
+
+        .feature-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .feature-desc {
+            color: var(--text-sub);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        /* Before/After セクション */
+        .comparison {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        @media(max-width: 768px) {
+            .comparison {
+                flex-direction: column;
+            }
+        }
+
+        .comp-box {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .comp-bad {
+            background: rgba(198, 40, 40, 0.1);
+            border: 1px solid rgba(198, 40, 40, 0.3);
+        }
+
+        .comp-good {
+            background: rgba(46, 125, 50, 0.1);
+            border: 1px solid rgba(46, 125, 50, 0.3);
+        }
+
+        .comp-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comp-bad .comp-title {
+            color: #ff5252;
+        }
+
+        .comp-good .comp-title {
+            color: #69f0ae;
+        }
+
+        .comp-list {
+            list-style: none;
+        }
+
+        .comp-list li {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 15px;
+            color: var(--text-sub);
+        }
+
+        .comp-list li::before {
+            content: '×';
+            position: absolute;
+            left: 0;
+            color: #ff5252;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .comp-good .comp-list li::before {
+            content: '✓';
+            color: #69f0ae;
+        }
+
+        .comp-good .comp-list li {
+            color: var(--text-main);
+        }
+
+        /* CTAセクション */
+        .cta-section {
+            text-align: center;
+            padding: 80px 40px;
+            margin: 60px auto;
+            max-width: 900px;
+        }
+
+        .cta-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .cta-desc {
+            font-size: 18px;
+            color: var(--text-sub);
+            margin-bottom: 40px;
+        }
+
+        /* 料金プラン */
+        .pricing {
+            text-align: center;
+        }
+
+        .price-box {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 50px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-box::before {
+            content: '今なら1ヶ月無料';
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: var(--accent);
+            color: white;
+            padding: 5px 40px;
+            transform: rotate(45deg);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .price-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-sub);
+            margin-bottom: 15px;
+        }
+
+        .price-value {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--text-main);
+            margin-bottom: 20px;
+        }
+
+        .price-value span {
+            font-size: 18px;
+            font-weight: normal;
+            color: var(--text-sub);
+        }
+
+        /* スクロールアニメーション用 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* フッター */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-sub);
+            font-size: 14px;
+        }
+
+        /* レスポンシブ */
+        @media(max-width: 768px) {
+            .hero-title {
+                font-size: 32px;
+            }
+
+            header {
+                padding: 15px 20px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="header">
+        <a href="#" class="logo">GR-<span>1000N</span> App</a>
+        <a href="#contact" class="nav-btn">無料トライアル</a>
+    </header>
+
+    <main>
+        <!-- ファーストビュー -->
+        <section class="hero">
+            <div class="hero-container">
+                <h1 class="hero-title fade-in">
+                    定格総荷重の確認を<br>
+                    <span class="highlight">スマホで、一瞬で。</span>
+                </h1>
+                <p class="hero-subtitle fade-in" style="transition-delay: 0.2s;">
+                    分厚い性能表を探す時間はもう終わり。<br>
+                    現場のオペレーションを爆速化するGR-1000N専用アプリケーション。
+                </p>
+                <div class="hero-actions fade-in" style="transition-delay: 0.4s;">
+                    <a href="#about" class="btn-primary">詳細を見る</a>
+                    <a href="#demo" class="btn-secondary">デモ画面</a>
+                </div>
+
+                <div class="app-mockup fade-in" style="transition-delay: 0.6s;">
+                    <!-- プレースホルダー画像：実際のアプリスクショをはめる -->
+                    <img src="https://images.unsplash.com/photo-1541888086425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                        alt="アプリ画面イメージ"
+                        style="height: 400px; object-fit: cover; object-position: center; opacity: 0.8;">
+                    <div
+                        style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); 
+                                background:rgba(0,0,0,0.7); padding:20px 40px; border-radius:10px; border:1px solid var(--accent); color:var(--accent); font-weight:bold; letter-spacing:2px;">
+                        ※ここに実際の検索画面や動画が入ります
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 課題解決（Before/After） -->
+        <section id="about">
+            <div class="section-header fade-in">
+                <h2 class="section-title">現場の「面倒」をすべて解消</h2>
+                <p style="margin-top: 20px; color: var(--text-sub);">紙の性能表に依存したオペレーションには限界があります。</p>
+            </div>
+
+            <div class="comparison fade-in">
+                <div class="glass-panel comp-box comp-bad">
+                    <h3 class="comp-title">従来の現場</h3>
+                    <ul class="comp-list">
+                        <li>分厚い性能表から該当ページを探す手間</li>
+                        <li>CWの有無、前方・全周などの条件見落とし</li>
+                        <li>表の行と列の読み違えによる安全リスク</li>
+                        <li>急な重量変更による再計算で作業がストップ</li>
+                    </ul>
+                </div>
+                <div class="glass-panel comp-box comp-good">
+                    <h3 class="comp-title">本アプリ導入後</h3>
+                    <ul class="comp-list">
+                        <li>荷重・半径を入力するだけで<strong>1秒で結果表示</strong></li>
+                        <li>条件の切り替えもタップするだけの直感操作</li>
+                        <li>内部データによる自動計算で<strong>ヒューマンエラーをゼロに</strong></li>
+                        <li>物理的限界を超えた入力は自動で弾く<strong>安全機能搭載</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 特徴 -->
+        <section id="features">
+            <div class="section-header fade-in">
+                <h2 class="section-title">他にはない3つの強み</h2>
+            </div>
+            <div class="features-grid">
+                <div class="glass-panel feature-card fade-in" style="transition-delay: 0.1s;">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">爆速レスポンス</h3>
+                    <p class="feature-desc">
+                        最新のWeb技術により、アプリの起動から検索結果の表示まで遅延ゼロ。現場での「ちょっと待って」を無くします。
+                    </p>
+                </div>
+                <div class="glass-panel feature-card fade-in" style="transition-delay: 0.2s;">
+                    <div class="feature-icon">📵</div>
+                    <h3 class="feature-title">完全オフライン対応</h3>
+                    <p class="feature-desc">
+                        一度スマートフォンに読み込めば、山間部や地下など電波が全く届かない環境でも通常通りサクサク動作します。
+                    </p>
+                </div>
+                <div class="glass-panel feature-card fade-in" style="transition-delay: 0.3s;">
+                    <div class="feature-icon">🛡️</div>
+                    <h3 class="feature-title">自動安全補完ロジック</h3>
+                    <p class="feature-desc">
+                        12.5mなど中間の作業半径が入力された場合、自動的に「安全側（直前の厳しいデータ）」を判定して表示。現場の安全基準に準拠しています。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 機能デモ セクション -->
+        <section id="demo"
+            style="background: rgba(255,255,255,0.02); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);">
+            <div class="section-header fade-in">
+                <h2 class="section-title">直感的な操作画面</h2>
+                <p style="margin-top: 20px; color: var(--text-sub);">誰でも今日から使えるシンプルなUI設計。</p>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: center; justify-content: center;"
+                class="fade-in">
+                <div style="flex: 1; min-width: 300px; max-width: 500px;">
+                    <h3 style="font-size: 24px; color: var(--accent); margin-bottom: 20px;">AMLブロックID検索</h3>
+                    <p style="color: var(--text-sub); margin-bottom: 30px; line-height: 1.8;">
+                        現場のAML画面に表示されているブロックID（1〜29）を入力するだけで、瞬時にブーム長さと状態を確認可能。一覧表モードも搭載しています。
+                    </p>
+                    <h3 style="font-size: 24px; color: var(--accent); margin-bottom: 20px;">スマートな荷重＆半径検索</h3>
+                    <p style="color: var(--text-sub); line-height: 1.8;">
+                        吊り荷重から「どこまで運べるか」を逆引き。また、指定した作業半径から「どれだけ吊れるか」を瞬時にリストアップし、最適な長さを提案します。
+                    </p>
+                </div>
+                <div
+                    style="flex: 1; min-width: 300px; max-width: 400px; background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <!-- アプリのUIっぽいモックアップ -->
+                    <div style="background: var(--bg-dark); border-radius: 12px; padding: 15px;">
+                        <div style="color: white; font-weight: bold; margin-bottom: 10px;">作業半径から検索</div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <div
+                                style="flex: 1; background: white; padding: 10px; border-radius: 8px; color: #333; font-weight: bold;">
+                                12.5 m</div>
+                            <div
+                                style="background: var(--accent); color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold;">
+                                検索</div>
+                        </div>
+                        <div
+                            style="background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-bottom: 10px;">
+                            作業半径 12.5m で最大荷重: ブーム 10.2m → 12.8t
+                        </div>
+                        <div style="background: white; border-radius: 8px; font-size: 12px;">
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;">
+                                <span style="color: #333; font-weight:bold;">10.2m</span>
+                                <span style="color: #ff6f00; font-weight:bold;">ID 1</span>
+                                <span style="color: #2e7d32; font-weight:bold;">12.8 t <span
+                                        style="font-size:10px; color:#999;">(12.0m)</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- プラン・料金 -->
+        <section id="pricing" class="pricing">
+            <div class="section-header fade-in">
+                <h2 class="section-title">導入プラン</h2>
+                <p style="margin-top: 20px; color: var(--text-sub);">買い切り不要。常に最新データが保たれるクラウドモデル。</p>
+            </div>
+            <div class="glass-panel price-box fade-in">
+                <div class="price-name">スタンダードプラン</div>
+                <div class="price-value">¥1,500 <span>/ 月・端末</span></div>
+                <ul
+                    style="list-style: none; text-align: left; margin-top: 30px; margin-bottom: 40px; color: var(--text-sub);">
+                    <li style="margin-bottom: 15px;">✓ GR-1000N 完全対応</li>
+                    <li style="margin-bottom: 15px;">✓ オフライン利用ライセンス</li>
+                    <li style="margin-bottom: 15px;">✓ 今後追加される機種データの無償反映</li>
+                    <li style="margin-bottom: 15px;">✓ 端末ごとのアカウント管理による安全運用</li>
+                </ul>
+                <a href="#contact" class="btn-primary" style="display: block; text-align: center;">今すぐ1ヶ月無料で試す</a>
+            </div>
+        </section>
+
+        <!-- CTA / お問い合わせ -->
+        <section id="contact">
+            <div class="glass-panel cta-section fade-in">
+                <h2 class="cta-title">まずは、御社の現場でご体感ください。</h2>
+                <p class="cta-desc">
+                    「本当に現場の効率が上がるのか？」<br>
+                    まずは1ヶ月の無料トライアルで、その爆速検索を実際にお試しください。
+                </p>
+                <a href="mailto:info@example.com?subject=GR-1000Nアプリ 無料トライアルの申し込み" class="btn-primary"
+                    style="padding: 20px 60px; font-size: 20px;">
+                    無料トライアルをお申し込み
+                </a>
+                <p style="margin-top: 20px; font-size: 14px; color: var(--text-sub);">
+                    ※設定作業は不要です。お申し込み後すぐに専用URLとパスワードを発行します。
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Ohnoya Heavy Construction DX Solutions. All rights reserved.</p>
+    </footer>
+
+    <!-- スクロールアニメーション用スクリプト -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // スクロール時のヘッダー色変更
+            const header = document.getElementById("header");
+            window.addEventListener("scroll", () => {
+                if (window.scrollY > 50) {
+                    header.classList.add("scrolled");
+                } else {
+                    header.classList.remove("scrolled");
+                }
+            });
+
+            // Intersection Observer によるフェードインアニメーション
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+
+</html>
