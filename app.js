@@ -289,7 +289,10 @@ function generateBlockIdTable() {
 
     for (var id = 1; id <= 29; id++) {
         var blockInfo = getBlockInfo(id);
-        var hasData = LOAD_DATA['sc1_4t'] && LOAD_DATA['sc1_4t'][id];
+        var hasData = false;
+        for (var mode in LOAD_DATA) {
+            if (LOAD_DATA[mode][id]) { hasData = true; break; }
+        }
         if (blockInfo) {
             html += '<tr>' +
                 '<td style="font-weight: 700; color: var(--primary);">ID ' + id + '</td>' +
