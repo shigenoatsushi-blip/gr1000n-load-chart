@@ -361,6 +361,11 @@ function searchByRadius() {
 
         var radii = Object.keys(radiusData).map(Number).sort(function (a, b) { return a - b; });
 
+        // もし入力された作業半径が、このブームで可能な最大作業半径を超えていれば（届かない）、スキップ
+        if (radii.length === 0 || radius > radii[radii.length - 1]) {
+            continue;
+        }
+
         var matchedRadius = null;
         for (var j = 0; j < radii.length; j++) {
             if (radii[j] === radius) {
@@ -370,13 +375,12 @@ function searchByRadius() {
                 // 入力半径を超えたら、その1つ前（直近の小さい値）を採用する
                 if (j > 0) {
                     matchedRadius = radii[j - 1];
+                } else {
+                    // 入力半径が表の最小値よりもさらに内側だった場合は、最初のデータ（最小半径）を採用する
+                    matchedRadius = radii[0];
                 }
                 break;
             }
-        }
-        // 全てのデータが入力半径より小さい場合は、最大の半径を採用
-        if (matchedRadius === null && radii.length > 0 && radii[radii.length - 1] < radius) {
-            matchedRadius = radii[radii.length - 1];
         }
 
         if (matchedRadius !== null) {
